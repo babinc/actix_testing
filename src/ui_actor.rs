@@ -2,8 +2,9 @@ use actix::{Actor, Context, Handler, ActorStream, ContextFutureSpawner, Addr};
 use crate::Ping;
 use actix::utils::IntervalFunc;
 use std::time::Duration;
-use crate::app_actor::AppActor;
+use crate::app_actor::{AppActor, Request};
 use futures::Future;
+use crate::app_actor::Request::Test;
 
 pub struct UiActor {
     pub count: usize,
@@ -12,7 +13,14 @@ pub struct UiActor {
 
 impl UiActor {
     fn draw(&mut self, _: &mut Context<Self>) {
-        let fut = self.app_addr.send(Ping(10));
+//        let fut = self.app_addr.send(Ping(10));
+//        let resp = fut.wait();
+//        match resp {
+//            Ok(result) => println!("ui result: {}", result),
+//            Err(e) => println!("ui err: {}", e.to_string()),
+//        }
+
+        let fut = self.app_addr.send(Request::Test);
         let resp = fut.wait();
         match resp {
             Ok(result) => println!("ui result: {}", result),

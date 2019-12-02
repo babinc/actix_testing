@@ -1,5 +1,13 @@
-use actix::{Actor, Context, Handler};
+use actix::{Actor, Context, Handler, Message};
 use crate::Ping;
+
+pub enum Request {
+    Test,
+}
+
+impl Message for Request {
+    type Result = i32;
+}
 
 pub struct AppActor {
     pub value: usize,
@@ -23,5 +31,15 @@ impl Handler<Ping> for AppActor {
 
         self.value += msg.0;
         self.value
+    }
+}
+
+impl Handler<Request> for AppActor {
+    type Result = i32;
+
+    fn handle(&mut self, msg: Request, _: &mut Context<Self>) -> Self::Result {
+        match msg {
+            Request::Test => 32
+        }
     }
 }
