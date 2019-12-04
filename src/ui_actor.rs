@@ -1,31 +1,34 @@
-use actix::{Actor, Context, Handler, ActorStream, ContextFutureSpawner, Addr};
-use crate::Ping;
+use actix::{Actor, Context, ActorStream, ContextFutureSpawner, Addr};
 use actix::utils::IntervalFunc;
 use std::time::Duration;
-use crate::app_actor::{AppActor, Request};
+use crate::app_actor::{AppActor, Request, Response};
 use futures::Future;
-use crate::app_actor::Request::Test;
 
 pub struct UiActor {
-    pub count: usize,
+    count: i32,
     pub app_addr: Addr<AppActor>
 }
 
 impl UiActor {
-    fn draw(&mut self, _: &mut Context<Self>) {
-//        let fut = self.app_addr.send(Ping(10));
-//        let resp = fut.wait();
-//        match resp {
-//            Ok(result) => println!("ui result: {}", result),
-//            Err(e) => println!("ui err: {}", e.to_string()),
-//        }
-
-        let fut = self.app_addr.send(Request::Test);
-        let resp = fut.wait();
-        match resp {
-            Ok(result) => println!("ui result: {}", result),
-            Err(e) => println!("ui err: {}", e.to_string()),
+    pub fn new(app_addr: Addr<AppActor>) -> UiActor {
+        UiActor {
+            count: 0,
+            app_addr
         }
+    }
+
+    fn draw(&mut self, _: &mut Context<Self>) {
+        if self.count == 2 {
+            self.app_addr.do_send(Request::SetValue(20));
+        }
+
+        let fut = self.app_addr.send(Request::GetValue);
+        let resp = fut.wait().unwrap().unwrap_or(Response::Empty);
+        if let Response::Value(res) = resp {
+            println!("Value: {}", res);
+        }
+
+        self.count += 1;
     }
 }
 
@@ -33,18 +36,8 @@ impl Actor for UiActor {
     type Context = Context<Self>;
 
     fn started(&mut self, ctx: &mut Context<Self>) {
-        IntervalFunc::new(Duration::from_millis(1000), Self::draw)
+        IntervalFunc::new(Duration::from_millis(300), Self::draw)
             .finish()
             .spawn(ctx);
-    }
-}
-
-impl Handler<Ping> for UiActor {
-    type Result = usize;
-
-    fn handle(&mut self, msg: Ping, _: &mut Context<Self>) -> Self::Result {
-        println!("UI Got Message");
-        self.count += msg.0;
-        self.count
     }
 }
