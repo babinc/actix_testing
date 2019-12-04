@@ -19,7 +19,7 @@ impl UiActor {
 
     fn draw(&mut self, _: &mut Context<Self>) {
         if self.count == 2 {
-            self.app_addr.do_send(Request::SetValue(20));
+            self.app_addr.do_send(Request::DoValue(900));
         }
 
         let fut = self.app_addr.send(Request::GetValue);
@@ -36,7 +36,7 @@ impl Actor for UiActor {
     type Context = Context<Self>;
 
     fn started(&mut self, ctx: &mut Context<Self>) {
-        IntervalFunc::new(Duration::from_millis(300), Self::draw)
+        IntervalFunc::new(Duration::from_millis(1000), Self::draw)
             .finish()
             .spawn(ctx);
     }

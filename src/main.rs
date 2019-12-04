@@ -10,6 +10,8 @@ fn main() -> std::io::Result<()> {
         let ui_arbiter = Arbiter::new();
         let app_arbiter = Arbiter::new();
 
+//        let app_addr = SyncArbiter::start(3, || AppActor::new());
+
         let app_addr = AppActor::start_in_arbiter(
             &app_arbiter,
             move |_ctx: &mut Context<AppActor>| AppActor::new()

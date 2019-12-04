@@ -1,10 +1,11 @@
-use actix::{Actor, Context, Handler, Message};
+use actix::{Actor, Context, Handler, Message, AsyncContext};
 use std::thread;
 use std::time::Duration;
 
 pub enum Error {}
 
 pub enum Request {
+    DoValue(i32),
     SetValue(i32),
     GetValue,
 }
@@ -28,27 +29,32 @@ impl AppActor {
             value: 0
         }
     }
-
-    fn long_executing_stuff(&self) {
-        thread::sleep(Duration::from_secs(3));
-    }
 }
 
-impl Actor for AppActor{
+impl Actor for AppActor {
     type Context = Context<Self>;
 }
 
 impl Handler<Request> for AppActor {
     type Result = Result<Response, Error>;
 
-    fn handle(&mut self, msg: Request, _: &mut Context<Self>) -> Self::Result {
+
+    fn handle(&mut self, msg: Request, ctx: &mut Context<Self>) -> Self::Result {
         match msg {
+            Request::DoValue(val) => {
+                let addr = ctx.address();
+                thread::spawn(move || {
+                    thread::sleep(Duration::from_millis(5000));
+                    addr.do_send(Request::SetValue(val));
+                });
+                Ok(Response::Empty)
+            },
             Request::SetValue(val) => {
                 self.value = val;
-                self.long_executing_stuff();
                 Ok(Response::Empty)
             },
             Request::GetValue => {
+                self.value += 1;
                 Ok(Response::Value(self.value))
             }
         }
